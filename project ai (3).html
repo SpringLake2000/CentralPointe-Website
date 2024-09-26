@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CentralPointe</title>
+  <style >
+    body{
+    background-image: url('https://i.ibb.co/PZ8KRw1/Screenshot-2024-01-08-194657.png" alt="Screenshot-2024-01-08-194657');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    } 
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+    }
+
+    header{
+      background-color: #2a2929 ;
+      text-align: center;
+      padding: 8px;
+      border-width: 8px;
+      border-radius: 0px 0px 16px 16px;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+    }
+
+    #map-container {
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+
+    form {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      margin-top: 20px;
+      border-radius: 8px 8px 8px 8px;
+    }
+
+    input, select, button {
+      margin-top: 4px;
+      border-radius: 8px 8px 8px 8px;
+    }
+
+    button {
+      background-color: #ffffff;
+      color: #fff;
+      padding-top: 28px;
+      padding: 16px;
+      cursor: pointer;
+      border-radius: 12px 12px 12px 12px;
+    }
+
+    button:hover {
+      background-color: #f6ff74;
+      padding: 16px;
+      border-radius: 12px 12px 12px 12px;
+    }
+
+    #directions-panel {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 20px;
+    }
+
+    footer {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    footer a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+
+<body style="background-color: #ffffff;">
+  <header>
+    <h1 style="color: #ffffff; font-weight: bolder; text-shadow: #000000;">CentralPointé</h1>
+  </header>
+ 
+
+  <main>
+    <div id="map-container">
+        <center>
+      <div id="map"></div>
+      <form>
+        <label style="color: #ffffff;" for="location1">Location 1</label>
+        <input type="text" id="location1" placeholder="Enter Location 1">
+
+        <label style="color: #ffffff;" for="location2">Location 2</label>
+        <input type="text" id="location2" placeholder="Enter Location 2">
+
+        <label style="color: #ffffff;" for="radius">Radius Range (in KM)</label>
+        <input type="number" id="radius" placeholder="Enter Radius">
+
+
+        <label style="color: #ffffff;" for="transportationMode">Transportation Mode</label>
+        <select id="transportationMode">
+          <option value="driving">Car</option>
+          <option value="bicycling">Motorcycle</option>
+          <option value="transit">Public Transportation</option>
+          <option value="walking">Walking</option>
+        </select>
+
+        <button type="button" style="margin: 20px; font-weight: bolder; box-shadow: #4f5158; color: #1553e4;" onclick="findMeetingPoint()">Central Pointe</button>
+      </form>
+      <div id="directions-panel"></div>
+      
+    </center>
+    </div>
+  </main>
+
+  <footer>
+    <p> Created by Bernice </p>
+    
+  </footer>
+
+  <script>
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 0, lng: 0 },
+        zoom: 2
+      });
+    }
+
+    function findMeetingPoint() {
+      const location1 = document.getElementById('location1').value;
+      const location2 = document.getElementById('location2').value;
+      const mode = document.getElementById('transportationMode').value;
+      const radius = parseFloat(document.getElementById('radius').value);
+
+      if (!location1 || !location2 || isNaN(radius) || radius <= 0) {
+        alert('Please fill in all fields and provide a valid radius.');
+        return;
+      }
+
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: location1 }, function (results1, status1) {
+        if (status1 === 'OK') {
+          const location1LatLng = results1[0].geometry.location;
+
+          geocoder.geocode({ address: location2 }, function (results2, status2) {
+            if (status2 === 'OK') {
+              const location2LatLng = results2[0].geometry.location;
+
+              // Calculate midpoint
+              const midpointLat = (location1LatLng.lat() + location2LatLng.lat()) / 2;
+              const midpointLng = (location1LatLng.lng() + location2LatLng.lng()) / 2;
+
+              const map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: midpointLat, lng: midpointLng },
+                zoom: 12
+              });
+
+              // Add markers for locations 1 and 2
+              new google.maps.Marker({
+                position: location1LatLng,
+                map: map,
+                title: 'Location 1'
+              });
+
+              new google.maps.Marker({
+                position: location2LatLng,
+                map: map,
+                title: 'Location 2'
+              });
+
+              // Draw a circle with the specified radius
+              new google.maps.Circle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                center: { lat: midpointLat, lng: midpointLng },
+                radius: radius * 1000  // Convert to meters
+              });
+
+              // Display route
+              calculateAndDisplayRoute(location1LatLng, location2LatLng, mode, map);
+            } else {
+              alert('Geocode was not successful for Location 2: ' + status2);
+            }
+          });
+        } else {
+          alert('Geocode was not successful for Location 1: ' + status1);
+        }
+      });
+    }
+
+    function calculateAndDisplayRoute(origin, destination, mode, map) {
+      const directionsService = new google.maps.DirectionsService();
+      const directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        panel: document.getElementById('directions-panel')
+      });
+
+      directionsService.route(
+        {
+          origin: origin,
+          destination: destination,
+          travelMode: google.maps.TravelMode[mode]
+        },
+        function (response, status) {
+          if (status === 'OK') {
+            directionsRenderer.setDirections(response);
+          } else {
+            alert('Directions request failed due to ' + status);
+          }
+        }
+      );
+    }
+
+
+  </script>
+
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwL9GJ8ySGQ4BKujy2wMHueldRbUF-ILc&callback=initMap"></script>
+</body>
+</html>
